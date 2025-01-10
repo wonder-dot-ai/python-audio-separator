@@ -93,7 +93,15 @@ class Separator:
         use_soundfile=False,
         use_autocast=False,
         mdx_params={"hop_length": 1024, "segment_size": 256, "overlap": 0.25, "batch_size": 1, "enable_denoise": False},
-        vr_params={"batch_size": 1, "window_size": 512, "aggression": 5, "enable_tta": False, "enable_post_process": False, "post_process_threshold": 0.2, "high_end_process": False},
+        vr_params={
+            "batch_size": 1,
+            "window_size": 512,
+            "aggression": 5,
+            "enable_tta": False,
+            "enable_post_process": False,
+            "post_process_threshold": 0.2,
+            "high_end_process": False,
+        },
         demucs_params={"segment_size": "Default", "shifts": 2, "overlap": 0.25, "segments_enabled": True},
         mdxc_params={"segment_size": 256, "override_model_segment_size": False, "batch_size": 1, "overlap": 8, "pitch_shift": 0},
         info_only=False,
@@ -121,7 +129,9 @@ class Separator:
         # Skip initialization logs if info_only is True
         if not info_only:
             package_version = self.get_package_distribution("audio-separator").version
-            self.logger.info(f"Separator version {package_version} instantiating with output_dir: {output_dir}, output_format: {output_format}")
+            self.logger.info(
+                f"Separator version {package_version} instantiating with output_dir: {output_dir}, output_format: {output_format}"
+            )
 
         self.model_file_dir = model_file_dir
 
@@ -156,7 +166,9 @@ class Separator:
 
         self.invert_using_spec = invert_using_spec
         if self.invert_using_spec:
-            self.logger.debug(f"Secondary step will be inverted using spectogram rather than waveform. This may improve quality but is slightly slower.")
+            self.logger.debug(
+                f"Secondary step will be inverted using spectogram rather than waveform. This may improve quality but is slightly slower."
+            )
 
         try:
             self.sample_rate = int(sample_rate)
@@ -205,7 +217,9 @@ class Separator:
         self.logger.info(f"Operating System: {os_name} {os_version}")
 
         system_info = platform.uname()
-        self.logger.info(f"System: {system_info.system} Node: {system_info.node} Release: {system_info.release} Machine: {system_info.machine} Proc: {system_info.processor}")
+        self.logger.info(
+            f"System: {system_info.system} Node: {system_info.node} Release: {system_info.release} Machine: {system_info.machine} Proc: {system_info.processor}"
+        )
 
         python_version = platform.python_version()
         self.logger.info(f"Python Version: {python_version}")
@@ -433,7 +447,9 @@ class Separator:
         """
         download_checks_path = os.path.join(self.model_file_dir, "download_checks.json")
 
-        self.download_file_if_not_exists("https://raw.githubusercontent.com/TRvlvr/application_data/main/filelists/download_checks.json", download_checks_path)
+        self.download_file_if_not_exists(
+            "https://raw.githubusercontent.com/TRvlvr/application_data/main/filelists/download_checks.json", download_checks_path
+        )
 
         model_downloads_list = json.load(open(download_checks_path, encoding="utf-8"))
         self.logger.debug(f"UVR model download list loaded")
@@ -449,7 +465,9 @@ class Separator:
             self.logger.warning("Continuing without model scores")
 
         # Only show Demucs v4 models as we've only implemented support for v4
-        filtered_demucs_v4 = {key: value for key, value in model_downloads_list["demucs_download_list"].items() if key.startswith("Demucs v4")}
+        filtered_demucs_v4 = {
+            key: value for key, value in model_downloads_list["demucs_download_list"].items() if key.startswith("Demucs v4")
+        }
 
         # Modified Demucs handling to use YAML files as identifiers and include download files
         demucs_models = {}
@@ -481,7 +499,10 @@ class Separator:
                     "target_stem": model_scores.get(filename, {}).get("target_stem"),
                     "download_files": [filename],
                 }  # Just the filename for VR models
-                for name, filename in {**model_downloads_list["vr_download_list"], **audio_separator_models_list["vr_download_list"]}.items()
+                for name, filename in {
+                    **model_downloads_list["vr_download_list"],
+                    **audio_separator_models_list["vr_download_list"],
+                }.items()
             },
             "MDX": {
                 name: {
@@ -491,7 +512,11 @@ class Separator:
                     "target_stem": model_scores.get(filename, {}).get("target_stem"),
                     "download_files": [filename],
                 }  # Just the filename for MDX models
-                for name, filename in {**model_downloads_list["mdx_download_list"], **model_downloads_list["mdx_download_vip_list"], **audio_separator_models_list["mdx_download_list"]}.items()
+                for name, filename in {
+                    **model_downloads_list["mdx_download_list"],
+                    **model_downloads_list["mdx_download_vip_list"],
+                    **audio_separator_models_list["mdx_download_list"],
+                }.items()
             },
             "Demucs": demucs_models,
             "MDXC": {
@@ -519,8 +544,12 @@ class Separator:
         This method prints a message to the user if they have downloaded a VIP model, reminding them to support Anjok07 on Patreon.
         """
         if self.model_is_uvr_vip:
-            self.logger.warning(f"The model: '{self.model_friendly_name}' is a VIP model, intended by Anjok07 for access by paying subscribers only.")
-            self.logger.warning("If you are not already subscribed, please consider supporting the developer of UVR, Anjok07 by subscribing here: https://patreon.com/uvr")
+            self.logger.warning(
+                f"The model: '{self.model_friendly_name}' is a VIP model, intended by Anjok07 for access by paying subscribers only."
+            )
+            self.logger.warning(
+                "If you are not already subscribed, please consider supporting the developer of UVR, Anjok07 by subscribing here: https://patreon.com/uvr"
+            )
 
     def download_model_files(self, model_filename):
         """
@@ -653,7 +682,9 @@ class Separator:
         elif model_hash in vr_model_data_object:
             model_data = vr_model_data_object[model_hash]
         else:
-            raise ValueError(f"Unsupported Model File: parameters for MD5 hash {model_hash} could not be found in UVR model data file for MDX or VR arch.")
+            raise ValueError(
+                f"Unsupported Model File: parameters for MD5 hash {model_hash} could not be found in UVR model data file for MDX or VR arch."
+            )
 
         self.logger.debug(f"Model data loaded using hash {model_hash}: {model_data}")
 
@@ -703,7 +734,12 @@ class Separator:
         }
 
         # Instantiate the appropriate separator class depending on the model type
-        separator_classes = {"MDX": "mdx_separator.MDXSeparator", "VR": "vr_separator.VRSeparator", "Demucs": "demucs_separator.DemucsSeparator", "MDXC": "mdxc_separator.MDXCSeparator"}
+        separator_classes = {
+            "MDX": "mdx_separator.MDXSeparator",
+            "VR": "vr_separator.VRSeparator",
+            "Demucs": "demucs_separator.DemucsSeparator",
+            "MDXC": "mdxc_separator.MDXCSeparator",
+        }
 
         if model_type not in self.arch_specific_params or model_type not in separator_classes:
             raise ValueError(f"Model type not supported (yet): {model_type}")
@@ -724,40 +760,39 @@ class Separator:
         self.logger.debug("Loading model completed.")
         self.logger.info(f'Load model duration: {time.strftime("%H:%M:%S", time.gmtime(int(time.perf_counter() - load_model_start_time)))}')
 
-    def separate(self, audio_file_path, custom_output_names=None):
+    def separate(self, audio):
         """
-        Separates the audio file into different stems (e.g., vocals, instruments) using the loaded model.
-
-        This method takes the path to an audio file, processes it through the loaded separation model, and returns
-        the paths to the output files containing the separated audio stems. It handles the entire flow from loading
-        the audio, running the separation, clearing up resources, and logging the process.
+        Separates the audio (numpy array) into vocal stem using the loaded model.
 
         Parameters:
-        - audio_file_path (str): The path to the audio file to be separated.
-        - custom_output_names (dict, optional): Custom names for the output files. Defaults to None.
+        - audio (numpy array): The audio to be separated.
 
         Returns:
-        - output_files (list of str): A list containing the paths to the separated audio stem files.
+        - output (numpy array): The separated audio stem.
         """
         if not (self.torch_device and self.model_instance):
             raise ValueError("Initialization failed or model not loaded. Please load a model before attempting to separate.")
 
         # Starting the separation process
-        self.logger.info(f"Starting separation process for audio_file_path: {audio_file_path}")
+        self.logger.info(f"Starting separation process for audio")
         separate_start_time = time.perf_counter()
 
-        self.logger.debug(f"Normalization threshold set to {self.normalization_threshold}, waveform will be lowered to this max amplitude to avoid clipping.")
-        self.logger.debug(f"Amplification threshold set to {self.amplification_threshold}, waveform will be scaled up to this max amplitude if below it.")
+        self.logger.debug(
+            f"Normalization threshold set to {self.normalization_threshold}, waveform will be lowered to this max amplitude to avoid clipping."
+        )
+        self.logger.debug(
+            f"Amplification threshold set to {self.amplification_threshold}, waveform will be scaled up to this max amplitude if below it."
+        )
 
         # Run separation method for the loaded model with autocast enabled if supported by the device.
-        output_files = None
+        output = None
         if self.use_autocast and autocast_mode.is_autocast_available(self.torch_device.type):
             self.logger.debug("Autocast available.")
             with autocast_mode.autocast(self.torch_device.type):
-                output_files = self.model_instance.separate(audio_file_path, custom_output_names)
+                output = self.model_instance.separate(audio)
         else:
             self.logger.debug("Autocast unavailable.")
-            output_files = self.model_instance.separate(audio_file_path, custom_output_names)
+            output = self.model_instance.separate(audio)
 
         # Clear GPU cache to free up memory
         self.model_instance.clear_gpu_cache()
@@ -765,14 +800,11 @@ class Separator:
         # Unset more separation params to prevent accidentally re-using the wrong source files or output paths
         self.model_instance.clear_file_specific_paths()
 
-        # Remind the user one more time if they used a VIP model, so the message doesn't get lost in the logs
-        self.print_uvr_vip_message()
-
         # Log the completion of the separation process
         self.logger.debug("Separation process completed.")
         self.logger.info(f'Separation duration: {time.strftime("%H:%M:%S", time.gmtime(int(time.perf_counter() - separate_start_time)))}')
 
-        return output_files
+        return output
 
     def download_model_and_data(self, model_filename):
         """
@@ -792,7 +824,9 @@ class Separator:
 
         model_data_dict_size = len(model_data)
 
-        self.logger.info(f"Model downloaded, type: {model_type}, friendly name: {model_friendly_name}, model_path: {model_path}, model_data: {model_data_dict_size} items")
+        self.logger.info(
+            f"Model downloaded, type: {model_type}, friendly name: {model_friendly_name}, model_path: {model_path}, model_data: {model_data_dict_size} items"
+        )
 
     def get_simplified_model_list(self, filter_sort_by: Optional[str] = None):
         """

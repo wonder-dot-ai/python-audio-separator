@@ -49,9 +49,27 @@ class CommonSeparator:
     BV_VOCAL_STEM_LABEL = "Backing Vocals"
     NO_STEM = "No "
 
-    STEM_PAIR_MAPPER = {VOCAL_STEM: INST_STEM, INST_STEM: VOCAL_STEM, LEAD_VOCAL_STEM: BV_VOCAL_STEM, BV_VOCAL_STEM: LEAD_VOCAL_STEM, PRIMARY_STEM: SECONDARY_STEM}
+    STEM_PAIR_MAPPER = {
+        VOCAL_STEM: INST_STEM,
+        INST_STEM: VOCAL_STEM,
+        LEAD_VOCAL_STEM: BV_VOCAL_STEM,
+        BV_VOCAL_STEM: LEAD_VOCAL_STEM,
+        PRIMARY_STEM: SECONDARY_STEM,
+    }
 
-    NON_ACCOM_STEMS = (VOCAL_STEM, OTHER_STEM, BASS_STEM, DRUM_STEM, GUITAR_STEM, PIANO_STEM, SYNTH_STEM, STRINGS_STEM, WOODWINDS_STEM, BRASS_STEM, WIND_INST_STEM)
+    NON_ACCOM_STEMS = (
+        VOCAL_STEM,
+        OTHER_STEM,
+        BASS_STEM,
+        DRUM_STEM,
+        GUITAR_STEM,
+        PIANO_STEM,
+        SYNTH_STEM,
+        STRINGS_STEM,
+        WOODWINDS_STEM,
+        BRASS_STEM,
+        WIND_INST_STEM,
+    )
 
     def __init__(self, config):
 
@@ -105,12 +123,16 @@ class CommonSeparator:
 
         self.logger.debug(f"Common params: model_name={self.model_name}, model_path={self.model_path}")
         self.logger.debug(f"Common params: output_dir={self.output_dir}, output_format={self.output_format}")
-        self.logger.debug(f"Common params: normalization_threshold={self.normalization_threshold}, amplification_threshold={self.amplification_threshold}")
+        self.logger.debug(
+            f"Common params: normalization_threshold={self.normalization_threshold}, amplification_threshold={self.amplification_threshold}"
+        )
         self.logger.debug(f"Common params: enable_denoise={self.enable_denoise}, output_single_stem={self.output_single_stem}")
         self.logger.debug(f"Common params: invert_using_spec={self.invert_using_spec}, sample_rate={self.sample_rate}")
 
         self.logger.debug(f"Common params: primary_stem_name={self.primary_stem_name}, secondary_stem_name={self.secondary_stem_name}")
-        self.logger.debug(f"Common params: is_karaoke={self.is_karaoke}, is_bv_model={self.is_bv_model}, bv_model_rebalance={self.bv_model_rebalance}")
+        self.logger.debug(
+            f"Common params: is_karaoke={self.is_karaoke}, is_bv_model={self.is_bv_model}, bv_model_rebalance={self.bv_model_rebalance}"
+        )
 
         # File-specific variables which need to be cleared between processing different audio inputs
         self.audio_file_path = None
@@ -193,33 +215,14 @@ class CommonSeparator:
         """
         self.cached_sources_map[model_architecture] = {**self.cached_sources_map.get(model_architecture, {}), **{model_name: sources}}
 
-    def prepare_mix(self, mix):
+    def prepare_mix(self, mix: np.ndarray) -> np.ndarray:
         """
-        Prepares the mix for processing. This includes loading the audio from a file if necessary,
-        ensuring the mix is in the correct format, and converting mono to stereo if needed.
+        Prepares the mix for processing. This includes ensuring the mix is in the correct format, and converting mono to stereo if needed.
         """
-        # Store the original path or the mix itself for later checks
-        audio_path = mix
-
-        # Check if the input is a file path (string) and needs to be loaded
-        if not isinstance(mix, np.ndarray):
-            self.logger.debug(f"Loading audio from file: {mix}")
-            mix, sr = librosa.load(mix, mono=False, sr=self.sample_rate)
-            self.logger.debug(f"Audio loaded. Sample rate: {sr}, Audio shape: {mix.shape}")
-        else:
-            # Transpose the mix if it's already an ndarray (expected shape: [channels, samples])
-            self.logger.debug("Transposing the provided mix array.")
-            mix = mix.T
-            self.logger.debug(f"Transposed mix shape: {mix.shape}")
-
-        # If the original input was a filepath, check if the loaded mix is empty
-        if isinstance(audio_path, str):
-            if not np.any(mix):
-                error_msg = f"Audio file {audio_path} is empty or not valid"
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-            else:
-                self.logger.debug("Audio file is valid and contains data.")
+        # Transpose the mix (expected shape: [channels, samples])
+        self.logger.debug("Transposing the provided mix array.")
+        mix = mix.T
+        self.logger.debug(f"Transposed mix shape: {mix.shape}")
 
         # Ensure the mix is in stereo format
         if mix.ndim == 1:
@@ -285,7 +288,9 @@ class CommonSeparator:
 
         # Create a pydub AudioSegment
         try:
-            audio_segment = AudioSegment(stem_source_interleaved.tobytes(), frame_rate=self.sample_rate, sample_width=stem_source.dtype.itemsize, channels=2)
+            audio_segment = AudioSegment(
+                stem_source_interleaved.tobytes(), frame_rate=self.sample_rate, sample_width=stem_source.dtype.itemsize, channels=2
+            )
             self.logger.debug("Created AudioSegment successfully.")
         except (IOError, ValueError) as e:
             self.logger.error(f"Specific error creating AudioSegment: {e}")
