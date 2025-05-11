@@ -156,30 +156,17 @@ class MDXSeparator(CommonSeparator):
         source = self.demix(mix)
         self.logger.debug("Demixing completed.")
 
-        # Normalize and transpose the primary source if it's not already an array
-        # Keep this for potential internal use, but don't return it.
-        if not isinstance(self.primary_source, np.ndarray):
-            self.logger.debug("Normalizing primary source...")
-            self.primary_source = spec_utils.normalize(
-                wave=source, max_peak=self.normalization_threshold, min_peak=self.amplification_threshold
-            ).T
-
         # Calculate the secondary source
         if not isinstance(self.secondary_source, np.ndarray):
             self.logger.debug("Producing secondary source: demixing in match_mix mode")
             # Store the original mix before normalization for subtraction-based inversion
-            original_mix_transposed = self.audio.T
-            raw_mix = self.demix(mix, is_match_mix=True)
+            original_mix_transposed = self.audio
 
-            if self.invert_using_spec:
-                self.logger.debug("Inverting secondary stem using spectogram as invert_using_spec is set to True")
-                secondary_source_non_normalized = spec_utils.invert_stem(raw_mix, source)
-            else:
-                # Transpose the primary source *before* normalization for correct subtraction
-                primary_source_transposed = source.T
-                self.logger.debug("Inverting secondary stem by subtracting transposed demixed stem from transposed original mix")
-                # Use the original audio mix for subtraction, not the normalized one
-                secondary_source_non_normalized = original_mix_transposed - primary_source_transposed
+            # Transpose the primary source *before* normalization for correct subtraction
+            primary_source_transposed = source.T
+            self.logger.debug("Inverting secondary stem by subtracting transposed demixed stem from transposed original mix")
+            # Use the original audio mix for subtraction, not the normalized one
+            secondary_source_non_normalized = original_mix_transposed - primary_source_transposed
 
             self.logger.debug("Normalizing secondary source...")
             self.secondary_source = spec_utils.normalize(
