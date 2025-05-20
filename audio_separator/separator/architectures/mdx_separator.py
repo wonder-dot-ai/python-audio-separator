@@ -156,14 +156,25 @@ class MDXSeparator(CommonSeparator):
         source = self.demix(mix)
         self.logger.debug("Demixing completed.")
 
-        # Normalize and transpose the primary source if it's not already an array
-        if not isinstance(self.primary_source, np.ndarray):
-            self.logger.debug("Normalizing primary source...")
-            self.primary_source = spec_utils.normalize(
-                wave=source, max_peak=self.normalization_threshold, min_peak=self.amplification_threshold
+        # Calculate the secondary source
+        if not isinstance(self.secondary_source, np.ndarray):
+            self.logger.debug("Producing secondary source: demixing in match_mix mode")
+            # Store the original mix before normalization for subtraction-based inversion
+            original_mix_transposed = self.audio
+
+            # Transpose the primary source *before* normalization for correct subtraction
+            primary_source_transposed = source.T
+            self.logger.debug("Inverting secondary stem by subtracting transposed demixed stem from transposed original mix")
+            # Use the original audio mix for subtraction, not the normalized one
+            secondary_source_non_normalized = original_mix_transposed - primary_source_transposed
+
+            self.logger.debug("Normalizing secondary source...")
+            self.secondary_source = spec_utils.normalize(
+                wave=secondary_source_non_normalized.T, max_peak=self.normalization_threshold, min_peak=self.amplification_threshold
             ).T
 
-        return self.primary_source
+        # Return the secondary source instead of the primary source
+        return self.secondary_source
 
     def initialize_model_settings(self):
         """
